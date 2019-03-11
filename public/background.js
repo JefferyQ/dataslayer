@@ -1,50 +1,47 @@
-/* global chrome, browser */
 var devtoolsPort = [];
 var notifId = '';
-var browserInterface = chrome || undefined;
-
-browserInterface.runtime.onConnect.addListener(function (port) {
+chrome.runtime.onConnect.addListener(function (port) {
 	devtoolsPort.push(port);
 });
 
-var dsDebug = (browserInterface.runtime.id === 'ikbablmmjldhamhcldjjigniffkkjgpo' ? false : true);
+var dsDebug = (chrome.runtime.id === 'ikbablmmjldhamhcldjjigniffkkjgpo' ? false : true);
 
 
 function addBlocking() {
 	removeBlocking();
-	if (browserInterface.declarativeWebRequest)
-		browserInterface.declarativeWebRequest.onRequest.addRules([{
+	if (chrome.declarativeWebRequest)
+		chrome.declarativeWebRequest.onRequest.addRules([{
 			id: 'dataslayerBlocking',
 			conditions: [
-				new browserInterface.declarativeWebRequest.RequestMatcher({
+				new chrome.declarativeWebRequest.RequestMatcher({
 					url: {
 						hostSuffix: 'google-analytics.com',
 						pathPrefix: '/collect',
 						schemes: ['http', 'https']
 					},
 				}),
-				new browserInterface.declarativeWebRequest.RequestMatcher({
+				new chrome.declarativeWebRequest.RequestMatcher({
 					url: {
 						hostSuffix: 'google-analytics.com',
 						pathPrefix: '/__utm.gif',
 						schemes: ['http', 'https']
 					},
 				}),
-				new browserInterface.declarativeWebRequest.RequestMatcher({
+				new chrome.declarativeWebRequest.RequestMatcher({
 					url: {
 						hostSuffix: 'stats.g.doubleclick.net',
 						pathPrefix: '/__utm.gif',
 						schemes: ['http', 'https']
 					},
 				}),
-				new browserInterface.declarativeWebRequest.RequestMatcher({
+				new chrome.declarativeWebRequest.RequestMatcher({
 					url: {
 						hostSuffix: 'doubleclick.net',
 						pathPrefix: '/activity',
 						schemes: ['http', 'https']
 					},
 				}),
-				new browserInterface.declarativeWebRequest.RequestMatcher({
+				new chrome.declarativeWebRequest.RequestMatcher({
 					url: {
 						pathPrefix: '/b/ss',
 						queryContains: 'AQB=1',
@@ -53,22 +50,22 @@ function addBlocking() {
 				})
 			],
 			actions: [
-				new browserInterface.declarativeWebRequest.RedirectToTransparentImage()
+				new chrome.declarativeWebRequest.RedirectToTransparentImage()
 			]
 		}]);
 }
 
 function removeBlocking() {
-	if (browserInterface.declarativeWebRequest)
-		browserInterface.declarativeWebRequest.onRequest.removeRules(['dataslayerBlocking']);
+	if (chrome.declarativeWebRequest)
+		chrome.declarativeWebRequest.onRequest.removeRules(['dataslayerBlocking']);
 }
 
-browserInterface.storage.sync.get(null, function (items) {
+chrome.storage.sync.get(null, function (items) {
 	if (items.hasOwnProperty('blockTags') && items.blockTags === true) addBlocking();
 	else removeBlocking();
 });
 
-browserInterface.runtime.onMessage.addListener(function (message, sender, sendResponse) {
+chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
   if (dsDebug) {
 	  console.log(message);
   }
@@ -96,17 +93,17 @@ browserInterface.runtime.onMessage.addListener(function (message, sender, sendRe
     message.type === 'dataslayer_pageload' ||
     message.type === 'dataslayer_opened'
   ) {
-    browserInterface.tabs.executeScript(message.tabID, {
-      file: '/content.js',
+    chrome.tabs.executeScript(message.tabID, {
+      file: 'content.js',
       runAt: 'document_idle',
       allFrames: true,
     });
   } else if (message.type === 'dataslayer_refresh') {
-    browserInterface.tabs.sendMessage(message.tabID, {
+    chrome.tabs.sendMessage(message.tabID, {
       ask: 'refresh',
     });
   } else if (message.type === 'dataslayer_unload')
-    browserInterface.tabs.executeScript(message.tabID, {
+    chrome.tabs.executeScript(message.tabID, {
       code:
         "document.head.removeChild(document.getElementById('dataslayer_script'));",
       runAt: 'document_idle',
@@ -126,25 +123,25 @@ browserInterface.runtime.onMessage.addListener(function (message, sender, sendRe
   }
 });
 
-browserInterface.runtime.onInstalled.addListener(function (details) {
+chrome.runtime.onInstalled.addListener(function (details) {
 	if (details.reason === 'install')
-		browserInterface.tabs.create({
+		chrome.tabs.create({
 			url: 'https://dataslayer.org/release-notes/',
 			active: true
 		});
 	if ((details.reason === 'update') && (!dsDebug)) {
-		browserInterface.notifications.create('', {
+		chrome.notifications.create('', {
 				type: 'basic',
 				title: 'dataslayer' + (dsDebug ? ' beta' : ''),
-				message: 'dataslayer' + (dsDebug ? ' beta' : '') + ' has been updated to version ' + browserInterface.runtime.getManifest().version + '.\n\nClick here to see what\'s new.',
+				message: 'dataslayer' + (dsDebug ? ' beta' : '') + ' has been updated to version ' + chrome.runtime.getManifest().version + '.\n\nClick here to see what\'s new.',
 				iconUrl: 'i128.png'
 			},
 			function (notificationId) {
 				notifId = notificationId;
 			}
 		);
-		browserInterface.notifications.onClicked.addListener(function (notificationId) {
-			if (notificationId == notifId) browserInterface.tabs.create({
+		chrome.notifications.onClicked.addListener(function (notificationId) {
+			if (notificationId == notifId) chrome.tabs.create({
 				url: 'https://dataslayer.org/release-notes/',
 				active: true
 			});

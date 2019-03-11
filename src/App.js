@@ -1,4 +1,4 @@
-/* global chrome, browser */
+/* global chrome */
 import React, { Component } from 'react';
 import uuid from 'uuid';
 import { GlobalHotKeys } from 'react-hotkeys';
@@ -8,17 +8,15 @@ import Options from './Options';
 import Search from './Search';
 import demoData from './demoData';
 
-var browserInterface = chrome || browser || undefined;
-
-// isDevTools
-// Returns whether or not we're running in a DevTools instance.
-function isDevTools() {
-  return typeof browserInterface !== 'undefined' &&
-    typeof browserInterface.devtools !== 'undefined';
+// isChromeDevTools
+// Returns whether or not we're running in a Chrome DevTools instance.
+function isChromeDevTools() {
+  return typeof chrome !== 'undefined' &&
+    typeof chrome.devtools !== 'undefined';
 }
 
 let dataslayer = {};
-if (!isDevTools()) {
+if (!isChromeDevTools()) {
   dataslayer = demoData;
 }
 else {
@@ -100,23 +98,23 @@ class Dataslayer extends Component {
       showOptions: false,
       searchMode: false,
       searchQuery: '',
-      port: (isDevTools() ? browserInterface.runtime.connect() : null),
+      port: (isChromeDevTools() ? chrome.runtime.connect() : null),
     };
   }
 
   componentDidMount() {
     this.loadSettings();
-    if (isDevTools()) {
-      if (browserInterface.devtools.panels.themeName === 'dark') {
+    if (isChromeDevTools()) {
+      if (chrome.devtools.panels.themeName === 'dark') {
         this.setState({ darkTheme: true });
       }
 
       this.setState({
-        debug: (browserInterface.runtime.id !== 'ikbablmmjldhamhcldjjigniffkkjgpo')
+        debug: (chrome.runtime.id !== 'ikbablmmjldhamhcldjjigniffkkjgpo')
       });
 
       // check for existing requests
-      browserInterface.devtools.network.getHAR((harlog) => {
+      chrome.devtools.network.getHAR((harlog) => {
         if (harlog && harlog.entries) {
           harlog.entries.forEach((v, i, a) => {
             this.newRequest(v);
@@ -125,7 +123,7 @@ class Dataslayer extends Component {
       });
 
       // look for existing SiteCatalyst tags
-      browserInterface.devtools.inspectedWindow.eval(
+      chrome.devtools.inspectedWindow.eval(
         /* eslint-disable */
         '(function(){ var abla=[]; for (var attr in window)if (((typeof window[attr]==="object")&&(window[attr]))&&("src" in window[attr])) if ((attr.substring(0,4)==="s_i_")&&(window[attr].src.indexOf("/b/ss/"))) abla.push(window[attr].src); return abla; })();',
         /* eslint-enable */
@@ -141,14 +139,14 @@ class Dataslayer extends Component {
       );
 
       // Set up listeners
-      browserInterface.devtools.network.onNavigated.addListener(this.newPageLoad);
-      browserInterface.devtools.network.onRequestFinished.addListener(this.newRequest);
+      chrome.devtools.network.onNavigated.addListener(this.newPageLoad);
+      chrome.devtools.network.onRequestFinished.addListener(this.newRequest);
       this.state.port.onMessage.addListener(this.messageListener);
 
       // WIP support for History API.
       //
-      // browserInterface.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-      //   if (tabId !== browserInterface.devtools.inspectedWindow.tabId) {
+      // chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+      //   if (tabId !== chrome.devtools.inspectedWindow.tabId) {
       //     return;
       //   } else {
       //     if (changeInfo.url) {
@@ -159,7 +157,7 @@ class Dataslayer extends Component {
       // });
 
       // Check for already injected content script
-      browserInterface.devtools.inspectedWindow.eval('dataslayer', (exists, error) => {
+      chrome.devtools.inspectedWindow.eval('dataslayer', (exists, error) => {
         if (!error) {
           // was already injected
           let GTMs = this.state.GTMs;
@@ -182,15 +180,15 @@ class Dataslayer extends Component {
 
           this.setState({ TLMs, GTMs });
 
-          browserInterface.runtime.sendMessage({
+          chrome.runtime.sendMessage({
             type: 'dataslayer_refresh',
-            tabID: browserInterface.devtools.inspectedWindow.tabId
+            tabID: chrome.devtools.inspectedWindow.tabId
           });
         } else {
           // was not already injected
-          browserInterface.runtime.sendMessage({
+          chrome.runtime.sendMessage({
             type: 'dataslayer_opened',
-            tabID: browserInterface.devtools.inspectedWindow.tabId
+            tabID: chrome.devtools.inspectedWindow.tabId
           });
         }
       }
@@ -219,8 +217,8 @@ class Dataslayer extends Component {
       console.log(error);
     }
 
-    if (isDevTools()) {
-      browserInterface.storage.sync.set(options);
+    if (isChromeDevTools()) {
+      chrome.storage.sync.set(options);
     }
 
     this.setState({
@@ -279,8 +277,8 @@ class Dataslayer extends Component {
       tags
     });
 
-    if (isDevTools()) {
-      browserInterface.runtime.sendMessage({ type: 'dataslayer_pageload', tabID: browserInterface.devtools.inspectedWindow.tabId });
+    if (isChromeDevTools()) {
+      chrome.runtime.sendMessage({ type: 'dataslayer_pageload', tabID: chrome.devtools.inspectedWindow.tabId });
     }
   }
 
@@ -443,7 +441,7 @@ class Dataslayer extends Component {
     console.log(`${message.type} received: ${JSON.stringify(message)}`);
     // console.log('state:', this.state);
     // }
-    if ((message.type === 'dataslayer_gtm') && (message.tabID === browserInterface.devtools.inspectedWindow.tabId)) {
+    if ((message.type === 'dataslayer_gtm') && (message.tabID === chrome.devtools.inspectedWindow.tabId)) {
       if (message.url !== 'iframe') {
         let urls = this.state.urls;
         urls[this.state.activeIndex] = message.url;
@@ -475,7 +473,7 @@ class Dataslayer extends Component {
           this.setState({ GTMs });
         }
       }
-    } else if ((message.type === 'dataslayer_tlm') && (message.tabID === browserInterface.devtools.inspectedWindow.tabId)) {
+    } else if ((message.type === 'dataslayer_tlm') && (message.tabID === chrome.devtools.inspectedWindow.tabId)) {
       if (message.url !== 'iframe') {
         let urls = this.state.urls;
         urls[this.state.activeIndex] = message.url;
@@ -507,7 +505,7 @@ class Dataslayer extends Component {
 
         this.setState({ utagDatas, TLMs });
       }
-    } else if ((message.type === 'dataslayer_tco') && (message.tabID === browserInterface.devtools.inspectedWindow.tabId)) {
+    } else if ((message.type === 'dataslayer_tco') && (message.tabID === chrome.devtools.inspectedWindow.tabId)) {
       console.log(message);
       if (message.url !== 'iframe') {
         let urls = this.state.urls;
@@ -538,7 +536,7 @@ class Dataslayer extends Component {
 
         this.setState({ TCOs, tcoDatas });
       }
-    } else if ((message.type === 'dataslayer_dtm') && (message.tabID === browserInterface.devtools.inspectedWindow.tabId)) {
+    } else if ((message.type === 'dataslayer_dtm') && (message.tabID === chrome.devtools.inspectedWindow.tabId)) {
       console.log(message);
       if (message.url !== 'iframe') {
         let urls = this.state.urls;
@@ -565,7 +563,7 @@ class Dataslayer extends Component {
         };
         this.setState({ dtmDatas });
       }
-    } else if ((message.type === 'dataslayer_launchdataelement') && (message.tabID === browserInterface.devtools.inspectedWindow.tabId)) {
+    } else if ((message.type === 'dataslayer_launchdataelement') && (message.tabID === chrome.devtools.inspectedWindow.tabId)) {
       console.log(message);
       if (message.data === 'found') {
         let { dtmDatas } = this.state;
@@ -578,7 +576,7 @@ class Dataslayer extends Component {
         }
         this.setState({ dtmDatas });
       }
-    } else if ((message.type === 'dataslayer_launchrulecompleted') && (message.tabID === browserInterface.devtools.inspectedWindow.tabId)) {
+    } else if ((message.type === 'dataslayer_launchrulecompleted') && (message.tabID === chrome.devtools.inspectedWindow.tabId)) {
       console.log(message);
       let { dtmDatas } = this.state;
       let thisDTM = dtmDatas[this.state.activeIndex];
@@ -592,7 +590,7 @@ class Dataslayer extends Component {
         }
       }
       this.setState({ dtmDatas });
-    } else if ((message.type === 'dataslayer_var') && (message.tabID === browserInterface.devtools.inspectedWindow.tabId)) {
+    } else if ((message.type === 'dataslayer_var') && (message.tabID === chrome.devtools.inspectedWindow.tabId)) {
       let varDatas = this.state.varDatas;
       if (message.url !== 'iframe') {
         let urls = this.state.urls;
@@ -622,7 +620,7 @@ class Dataslayer extends Component {
         this.setState({ varDatas });
       }
     }
-    if ((message.type === 'dataslayer_gtm_push') && (message.tabID === browserInterface.devtools.inspectedWindow.tabId)) {
+    if ((message.type === 'dataslayer_gtm_push') && (message.tabID === chrome.devtools.inspectedWindow.tabId)) {
       if (message.url !== 'iframe') {
         let urls = this.state.urls;
         urls[this.state.activeIndex] = message.url;
@@ -724,8 +722,8 @@ class Dataslayer extends Component {
 
     this.setState({ options });
 
-    if (isDevTools()) {
-      browserInterface.storage.sync.get(null, (items) => {
+    if (isChromeDevTools()) {
+      chrome.storage.sync.get(null, (items) => {
         options = items;
         ['showFloodlight', 'showUniversal', 'showClassic', 'showSitecatalyst', 'showGTMLoad'].map((prop) => {
           if (!options.hasOwnProperty(prop)) {
