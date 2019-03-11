@@ -1,13 +1,15 @@
-/* global chrome */
+/* global chrome, browser */
 import React, { Component } from 'react';
 import PropTypes from 'prop-types'
+
+var browserInterface = chrome || browser || undefined;
 
 class Options extends Component {
   constructor(props) {
     super(props);
     let version = '1.1.0';
-    if (typeof chrome !== 'undefined' && typeof chrome.runtime !== 'undefined' && typeof chrome.runtime.getManifest !== 'undefined') {
-      version = chrome.runtime.getManifest().version;
+    if (typeof browserInterface !== 'undefined' && typeof browserInterface.runtime !== 'undefined' && typeof browserInterface.runtime.getManifest !== 'undefined') {
+      version = browserInterface.runtime.getManifest().version;
     }
     this.state = {
       version

@@ -1,8 +1,13 @@
-/* global chrome */
+/* global chrome, browser */
 
-chrome.devtools.panels.create(
-    'dataslayer' + (chrome.runtime.id === 'ikbablmmjldhamhcldjjigniffkkjgpo' ? '' : ' beta'),
-    null, // No icon path
-    'index.html',
-    null // no callback needed
+var browserInterface = chrome || browser || undefined;
+
+browserInterface.devtools.panels.create(
+  'dataslayer' +
+    (browserInterface.runtime.id === 'ikbablmmjldhamhcldjjigniffkkjgpo'
+      ? ''
+      : ' beta'),
+  'i128.png',
+  'index.html',
+  null // no callback needed
 );
