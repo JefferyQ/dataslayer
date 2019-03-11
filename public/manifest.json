@@ -23,6 +23,12 @@
     "oo_poly.js"
   ],
   
+  "applications": {
+    "gecko": {
+      "id": "beta@dataslayer.org"
+    }
+  },
+
   "permissions": [
     "tabs",
     "storage",
