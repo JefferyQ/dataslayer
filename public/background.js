@@ -1,3 +1,4 @@
+/* global chrome */
 var devtoolsPort = [];
 var notifId = '';
 chrome.runtime.onConnect.addListener(function (port) {
@@ -94,7 +95,7 @@ chrome.runtime.onMessage.addListener(function (message, sender, sendResponse) {
     message.type === 'dataslayer_opened'
   ) {
     chrome.tabs.executeScript(message.tabID, {
-      file: 'content.js',
+      file: './content.js',
       runAt: 'document_idle',
       allFrames: true,
     });
