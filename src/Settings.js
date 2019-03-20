@@ -44,33 +44,42 @@ class Settings extends Component {
 
     return (
       <div>
-        <a
+        <button
           className="settings"
           title="Options"
           onClick={this.props.onSettingsClick}
         >
           <img alt="options" src="/img/settings.png" />
-        </a>
-        <a
+        </button>
+        <button
           className="clearbtn"
           title="Clear History"
           onClick={this.showClearHistoryModal}
         >
           <img alt="clear" src="/img/clearbtn.png" />
-        </a>
-        <a
+        </button>
+        <button
           className="filebtn"
           title="Import / Export"
           onClick={this.showFileModal}
         >
           <img alt="import/export" src="/img/save.png" />
-        </a>
-        <a
+        </button>
+        <button
           className="searchbtn"
           title="Toggle Search (Ctrl+Alt+F)"
           onClick={this.props.onSearchClick}
         >
           <img alt="search" src="/img/search.png" />
+        </button>
+        <a
+          className="helpbtn"
+          title="Documentation"
+          href="https://dataslayer.org/documentation/"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <img alt="documentation" src="/img/help.png" />
         </a>
         {this.state.showModal && (
           <div>

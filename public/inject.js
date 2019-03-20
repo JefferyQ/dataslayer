@@ -11,6 +11,7 @@ function r(a,b,c){for(a.c.push.apply(a.c,b);!1===a.d&&0<a.c.length;){b=a.c.shift
 function p(a){return{set:function(b,c){s(t(b,c),a.a)},get:function(b){return a.get(b)}}}function t(a,b){for(var c={},d=c,e=a.split("."),f=0;f<e.length-1;f++)d=d[e[f]]={};d[e[e.length-1]]=b;return c}function s(a,b){for(var c in a)if(k(a,c)){var d=a[c];"array"==h(d)?("array"==h(b[c])||(b[c]=[]),s(d,b[c])):m(d)?(m(b[c])||(b[c]={}),s(d,b[c])):b[c]=d}};})();
 /* eslint-enable */
 
+
 var dataslayer = {
   helper: {},
   dLN: [],
@@ -404,43 +405,6 @@ dataslayer.dtmLoad = function() {
       // WIP Adobe Launch
       // console.log('isLaunch');
 
-      satellite._monitors = satellite._monitors || [];
-      satellite._monitors.push({
-        ruleTriggered: function (e) {
-          console.log(e.rule);
-          window.parent.postMessage(
-            {
-              type: 'dataslayer_launchruletriggered',
-              url: window == window.parent ? window.location.href : 'iframe',
-              data: JSON.parse(JSON.stringify(e.rule)),
-            },
-            '*'
-          );
-        },
-        ruleCompleted: function (e) {
-          console.log(e.rule);
-          window.parent.postMessage(
-            {
-              type: 'dataslayer_launchrulecompleted',
-              url: window == window.parent ? window.location.href : 'iframe',
-              data: JSON.parse(JSON.stringify(e.rule)),
-            },
-            '*'
-          );
-        },
-        ruleConditionFailed: function (e) {
-          console.log(e.rule);
-          window.parent.postMessage(
-            {
-              type: 'dataslayer_launchrulefailed',
-              url: window == window.parent ? window.location.href : 'iframe',
-              data: JSON.parse(JSON.stringify(e.rule)),
-            },
-            '*'
-          );
-        },
-      })
-
       var propertyInfo = '';
       if (satellite.property && satellite.property.name) {
         propertyInfo += satellite.property.name;
@@ -605,13 +569,13 @@ dataslayer.loadLaunchDataElements = function() {
 if (document.readyState === 'complete') {
   dataslayer.loadOtherLayers();
   dataslayer.loadLaunchDataElements();
-  window.setInterval(dataslayer.loadLaunchDataElements, 5000);
+  // window.setInterval(dataslayer.loadLaunchDataElements, 5000);
 } else {
   document.addEventListener('readystatechange', function() {
     if (document.readyState === 'complete') {
       dataslayer.loadOtherLayers();
       dataslayer.loadLaunchDataElements();
-      window.setInterval(dataslayer.loadLaunchDataElements, 5000);
+      // window.setInterval(dataslayer.loadLaunchDataElements, 5000);
     }
   });
 }
